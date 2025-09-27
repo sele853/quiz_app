@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
-import quizData from './assets/quizData';
-import './index.css';
+import React, { useState } from "react";
+import quizData from "./assets/quizData";
+import "./index.css";
 
 function App() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
+  const [selectedOptions, setSelectedOptions] = useState({});
 
-  const handleAnswerClick = (selectedOption) => {
-    if (selectedOption === quizData[currentQuestion].answer) {
+  const handleAnswerClick = (option) => {
+    setSelectedOptions({ ...selectedOptions, [currentQuestion]: option });
+  };
+
+  const handleNextQuestion = () => {
+    if (selectedOptions[currentQuestion] === quizData[currentQuestion].answer) {
       setScore(score + 1);
     }
 
@@ -20,10 +25,17 @@ function App() {
     }
   };
 
+  const handlePreviousQuestion = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1);
+    }
+  };
+
   const restartQuiz = () => {
     setCurrentQuestion(0);
     setScore(0);
     setShowScore(false);
+    setSelectedOptions({});
   };
 
   return (
@@ -51,12 +63,47 @@ function App() {
               {quizData[currentQuestion].options.map((option, index) => (
                 <button
                   key={index}
-                  className="bg-gray-200 p-3 rounded hover:bg-gray-300 text-left"
+                  className={`p-3 rounded  text-left ${
+                    selectedOptions[currentQuestion]
+                    ? option === quizData[currentQuestion].answer
+                    ? "bg-green-500 text-white":
+                    selectedOptions[currentQuestion] === option
+                        ?  "bg-red-500 text-white"
+                        :"bg-gray-200"
+                        : "bg-gray-200 hover:bg-gray-300 "
+                  }`}
                   onClick={() => handleAnswerClick(option)}
+                  disabled={selectedOptions[currentQuestion] !== undefined}
                 >
                   {option}
                 </button>
               ))}
+            </div>
+
+            <div
+              className={`mt-4 ${
+                currentQuestion >= 1
+                  ? "flex justify-between"
+                  : "flex justify-end"
+              }`}
+            >
+              {currentQuestion > 0 && (
+                <button
+                  onClick={handlePreviousQuestion}
+                  className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                >
+                  Previous
+                </button>
+              )}
+
+              {selectedOptions[currentQuestion] && (
+                <button
+                  onClick={handleNextQuestion}
+                  className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                >
+                  Next
+                </button>
+              )}
             </div>
           </>
         )}
