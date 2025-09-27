@@ -1,12 +1,23 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import quizData from "./assets/quizData";
 import "./index.css";
+import Question from "./Question";
 
 function App() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState({});
+  const [timeLeft, setTimeLeft] = useState(60);
+
+  useEffect(() => {
+    if (timeLeft > 0 && !showScore && !selectedOptions[currentQuestion]) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (timeLeft === 0 && !selectedOptions[currentQuestion]) {
+      handleNextQuestion();
+    }
+  }, [timeLeft, currentQuestion, showScore, selectedOptions]);
 
   const handleAnswerClick = (option) => {
     setSelectedOptions({ ...selectedOptions, [currentQuestion]: option });
@@ -20,6 +31,7 @@ function App() {
     const nextQuestion = currentQuestion + 1;
     if (nextQuestion < quizData.length) {
       setCurrentQuestion(nextQuestion);
+      setTimeLeft(60);
     } else {
       setShowScore(true);
     }
@@ -28,6 +40,7 @@ function App() {
   const handlePreviousQuestion = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
+      setTimeLeft(60);
     }
   };
 
@@ -36,6 +49,7 @@ function App() {
     setScore(0);
     setShowScore(false);
     setSelectedOptions({});
+    setTimeLeft(60);
   };
 
   return (
@@ -54,58 +68,17 @@ function App() {
             </button>
           </div>
         ) : (
-          <>
-            <h2 className="text-xl font-semibold mb-4">
-              Question {currentQuestion + 1}/{quizData.length}
-            </h2>
-            <p className="text-lg mb-6">{quizData[currentQuestion].question}</p>
-            <div className="grid gap-4">
-              {quizData[currentQuestion].options.map((option, index) => (
-                <button
-                  key={index}
-                  className={`p-3 rounded  text-left ${
-                    selectedOptions[currentQuestion]
-                    ? option === quizData[currentQuestion].answer
-                    ? "bg-green-500 text-white":
-                    selectedOptions[currentQuestion] === option
-                        ?  "bg-red-500 text-white"
-                        :"bg-gray-200"
-                        : "bg-gray-200 hover:bg-gray-300 "
-                  }`}
-                  onClick={() => handleAnswerClick(option)}
-                  disabled={selectedOptions[currentQuestion] !== undefined}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-
-            <div
-              className={`mt-4 ${
-                currentQuestion >= 1
-                  ? "flex justify-between"
-                  : "flex justify-end"
-              }`}
-            >
-              {currentQuestion > 0 && (
-                <button
-                  onClick={handlePreviousQuestion}
-                  className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                  Previous
-                </button>
-              )}
-
-              {selectedOptions[currentQuestion] && (
-                <button
-                  onClick={handleNextQuestion}
-                  className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                  Next
-                </button>
-              )}
-            </div>
-          </>
+           <Question
+            question={quizData[currentQuestion]}
+            currentQuestionIndex={currentQuestion}
+            totalQuestions={quizData.length}
+            timeLeft={timeLeft}
+            selectedOption={selectedOptions[currentQuestion]}
+            handleAnswerClick={handleAnswerClick}
+            handlePreviousQuestion={handlePreviousQuestion}
+            handleNextQuestion={handleNextQuestion}
+            score={score}
+          />
         )}
       </div>
     </div>
